@@ -7,7 +7,6 @@ import {
   type BreakdownParams,
   type TimeSeriesParams,
 } from "./mock-api";
-import { datasetEnd } from "./mock-data";
 import type { DimensionKey, Filters, TimeRange } from "./types";
 
 export function useDimensionValues(dimension: DimensionKey) {
@@ -37,8 +36,4 @@ export function useBreakDown(params: Omit<BreakdownParams, "signal">) {
     queryKey: ["breakdown", params],
     queryFn: ({ signal }) => fetchBreakdown({ ...params, signal }),
   });
-}
-
-export function rangeEndingNow(durationSec: number): TimeRange {
-  return { from: datasetEnd - durationSec, to: datasetEnd };
 }

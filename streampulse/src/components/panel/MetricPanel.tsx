@@ -2,6 +2,8 @@ import { METRIC_META, type MetricKey } from "@/api/types";
 import MetricError from "./MetricError";
 import MetricSkeleton from "./MetricSkeleton";
 import MetricValue from "./MetricValue";
+import clsx from "clsx";
+import { NavLink } from "react-router-dom";
 
 interface MetricPanelProps {
   metric: MetricKey;
@@ -23,9 +25,15 @@ function MetricPanel({
   const { label } = METRIC_META[metric];
 
   return (
-    <section
-      className="min-w-0 rounded-card border-2 border-line bg-surface p-4 hover:border-blue-500 cursor-pointer"
+    <NavLink
+      to={`/${metric}`}
       aria-label={label}
+      className={({ isActive }) =>
+        clsx(
+          "block min-w-0 rounded-card border-2 bg-surface p-4",
+          isActive ? "border-blue-500" : "border-line hover:border-blue-300",
+        )
+      }
     >
       <h2 className="m-0 mb-2 text-xs font-semibold uppercase tracking-wide text-muted">
         {label}
@@ -38,8 +46,7 @@ function MetricPanel({
         isError={isError}
         onRetry={onRetry}
       />
-     
-    </section>
+    </NavLink>
   );
 }
 
@@ -50,7 +57,7 @@ function PanelBody({
   isLoading,
   isError,
   onRetry,
-}: MetricPanelProps) {
+}: Omit<MetricPanelProps, "currenPanel">) {
   if (isError) return <MetricError onRetry={onRetry} />;
 
   if (isLoading || present === undefined || past === undefined) {

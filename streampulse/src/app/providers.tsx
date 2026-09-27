@@ -1,3 +1,5 @@
+import { theme } from "@/styles/theme";
+import { ThemeProvider } from "@mui/material/styles";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState, type ReactNode } from "react";
 
@@ -16,5 +18,9 @@ function createQueryClient() {
 
 export function Providers({ children }: { children: ReactNode }) {
   const [client] = useState(createQueryClient);
-  return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
+  return (
+    <ThemeProvider theme={theme}>
+      <QueryClientProvider client={client}>{children}</QueryClientProvider>
+    </ThemeProvider>
+  );
 }

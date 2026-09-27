@@ -6,5 +6,5 @@ export function rangeEndingNow(durationSec: number): TimeRange {
   return { from: datasetEnd - durationSec, to: datasetEnd };
 }
 
-export const isMetricKey = (value?: string) =>
+export const isMetricKey = (value?: string): value is MetricKey =>
   METRIC_KEYS.includes(value as MetricKey);

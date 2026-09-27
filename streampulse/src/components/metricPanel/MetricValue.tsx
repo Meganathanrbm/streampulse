@@ -1,11 +1,17 @@
 import clsx from "clsx";
 import { METRIC_META, type MetricKey } from "@/api/types";
-import { formatMetricValue, getTrend, type TrendTone } from "./metric-format";
+import { formatMetricValue, getTrend, type TrendTone } from "@/utils/formats";
 
 const TONE_CLASS: Record<TrendTone, string> = {
   good: "text-good",
   bad: "text-bad",
   neutral: "text-muted",
+};
+
+const TONE_TEXT: Record<TrendTone, string> = {
+  good: "better",
+  bad: "worse",
+  neutral: "no change",
 };
 
 const ARROW = { up: "▲", down: "▼", flat: "–" } as const;
@@ -36,6 +42,7 @@ function MetricValue({ metric, present, past }: MetricValueProps) {
       <p className="m-0 mt-1 flex items-center gap-1.5 text-xs">
         <span className={clsx("font-semibold", TONE_CLASS[trend.tone])}>
           <span aria-hidden="true">{ARROW[trend.direction]}</span> {percentText}
+          <span className="ml-1 font-normal">({TONE_TEXT[trend.tone]})</span>
         </span>
         <span className="text-muted">
           vs {formatMetricValue(past, meta)}

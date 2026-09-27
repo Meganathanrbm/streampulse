@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo } from "react";
 import { rangeEndingNow } from "@/utils/utils";
 import {
   DATE_PRESETS,
@@ -7,9 +7,9 @@ import {
   type Filters,
   type TimeRange,
 } from "@/api/types";
-
-
-export const ALL = "all";
+import { ALL } from "@/utils/constants";
+import { useSearchParams } from "react-router-dom";
+import { DIMENSIONS } from "../../api/types";
 
 export type Selections = Record<DimensionKey, string>;
 
@@ -20,22 +20,69 @@ export interface DashboardFilters {
   filters: Filters;
   setPreset: (preset: DatePreset) => void;
   setDimension: (dimension: DimensionKey, value: string) => void;
+  toggleDimension: (dimension: DimensionKey, value: string) => void;
+  clearAll: () => void;
 }
 
-export function useDashboardFilters(): DashboardFilters {
-  const [preset, setPreset] = useState<DatePreset>("last-7-days");
-  const [selections, setSelections] = useState<Selections>({
-    device: ALL,
-    country: ALL,
-    cdn: ALL,
-  });
+const RANGE_KEY = "range";
+const DEFAULT_PRESET = "last-7-days";
 
-  const setDimension = useCallback((dimension: DimensionKey, value: string) => {
-    setSelections((current) => ({ ...current, [dimension]: value }));
-  }, []);
+const isPreset = (v: string | null): v is DatePreset =>
+  DATE_PRESETS.some((p) => p.key === v);
+
+export function useDashboardFilters(): DashboardFilters {
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const rangeParams = searchParams.get(RANGE_KEY);
+  const preset: DatePreset = isPreset(rangeParams)
+    ? rangeParams
+    : DEFAULT_PRESET;
+
+  const selections = useMemo(
+    () =>
+      Object.fromEntries(
+        DIMENSIONS.map((d) => [d, searchParams.get(d) ?? ALL]),
+      ) as Selections,
+    [searchParams],
+  );
+
+  const update = useCallback(
+    (changes: Partial<Record<string, string>>) => {
+      setSearchParams((prev) => {
+        const next = new URLSearchParams(prev);
+        next.delete("page");
+        for (const [key, value] of Object.entries(changes)) {
+          const isDefault =
+            value === null ||
+            value === ALL ||
+            (key === RANGE_KEY && value === DEFAULT_PRESET);
+          if (isDefault || !value) next.delete(key);
+          else next.set(key, value);
+        }
+        return next;
+      });
+    },
+    [setSearchParams],
+  );
+
+  const setPreset = useCallback(
+    (p: DatePreset) => update({ [RANGE_KEY]: p }),
+    [update],
+  );
+
+  const setDimension = useCallback(
+    (dimension: DimensionKey, value: string) => update({ [dimension]: value }),
+    [update],
+  );
+
+  const toggleDimension = useCallback(
+    (dimension: DimensionKey, value: string) =>
+      update({ [dimension]: selections[dimension] === value ? ALL : value }),
+    [update, selections],
+  );
 
   const range = useMemo(() => {
-    const { durationSec } = DATE_PRESETS.find((p) => p.key === preset) ?? DATE_PRESETS[1];
+    const { durationSec } = DATE_PRESETS.find((p) => p.key === preset)!;
     return rangeEndingNow(durationSec);
   }, [preset]);
 
@@ -47,5 +94,19 @@ export function useDashboardFilters(): DashboardFilters {
     return result;
   }, [selections]);
 
-  return { preset, selections, range, filters, setPreset, setDimension };
+  const clearAll = useCallback(() => {
+    update(
+      Object.fromEntries([RANGE_KEY, ...DIMENSIONS].map((k) => [k, undefined])),
+    );
+  }, [update]);
+  return {
+    preset,
+    selections,
+    range,
+    filters,
+    setPreset,
+    setDimension,
+    toggleDimension,
+    clearAll,
+  };
 }

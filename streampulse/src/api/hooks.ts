@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import {
   fetchBreakdown,
   fetchDimensionValues,
@@ -28,6 +28,7 @@ export function useTimeSeries(params: Omit<TimeSeriesParams, "signal">) {
   return useQuery({
     queryKey: ["timeSeries", params],
     queryFn: ({ signal }) => fetchTimeSeries({ ...params, signal }),
+    placeholderData: keepPreviousData,
   });
 }
 
@@ -35,5 +36,6 @@ export function useBreakDown(params: Omit<BreakdownParams, "signal">) {
   return useQuery({
     queryKey: ["breakdown", params],
     queryFn: ({ signal }) => fetchBreakdown({ ...params, signal }),
+    placeholderData: keepPreviousData,
   });
 }

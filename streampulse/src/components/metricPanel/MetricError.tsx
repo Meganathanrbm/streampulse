@@ -9,7 +9,11 @@ function MetricError({ onRetry }: MetricErrorProps) {
       {onRetry && (
         <button
           type="button"
-          onClick={onRetry}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onRetry();
+          }}
           className="cursor-pointer rounded border border-line bg-transparent px-1.5 py-0.5 text-xs text-ink"
         >
           Retry

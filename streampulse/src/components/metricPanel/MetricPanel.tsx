@@ -1,9 +1,10 @@
 import { METRIC_META, type MetricKey } from "@/api/types";
+import MetricEmpty from "./MetricEmpty";
 import MetricError from "./MetricError";
 import MetricSkeleton from "./MetricSkeleton";
 import MetricValue from "./MetricValue";
 import clsx from "clsx";
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 
 interface MetricPanelProps {
   metric: MetricKey;
@@ -11,6 +12,7 @@ interface MetricPanelProps {
   past?: number;
   isLoading?: boolean;
   isError?: boolean;
+  isEmpty?: boolean;
   onRetry?: () => void;
 }
 
@@ -20,13 +22,24 @@ function MetricPanel({
   past,
   isLoading,
   isError,
+  isEmpty,
   onRetry,
 }: MetricPanelProps) {
   const { label } = METRIC_META[metric];
-
+  const { search } = useLocation();
+  let body;
+  if (isError) {
+    body = <MetricError onRetry={onRetry} />;
+  } else if (isLoading || present === undefined || past === undefined) {
+    body = <MetricSkeleton label={METRIC_META[metric].label} />;
+  } else if (isEmpty) {
+    body = <MetricEmpty />;
+  } else {
+    body = <MetricValue metric={metric} present={present} past={past} />;
+  }
   return (
     <NavLink
-      to={`/${metric}`}
+      to={{ pathname: `/${metric}`, search }}
       aria-label={label}
       className={({ isActive }) =>
         clsx(
@@ -38,33 +51,9 @@ function MetricPanel({
       <h2 className="m-0 mb-2 text-xs font-semibold uppercase tracking-wide text-muted">
         {label}
       </h2>
-      <PanelBody
-        metric={metric}
-        present={present}
-        past={past}
-        isLoading={isLoading}
-        isError={isError}
-        onRetry={onRetry}
-      />
+      {body}
     </NavLink>
   );
-}
-
-function PanelBody({
-  metric,
-  present,
-  past,
-  isLoading,
-  isError,
-  onRetry,
-}: Omit<MetricPanelProps, "currenPanel">) {
-  if (isError) return <MetricError onRetry={onRetry} />;
-
-  if (isLoading || present === undefined || past === undefined) {
-    return <MetricSkeleton label={METRIC_META[metric].label} />;
-  }
-
-  return <MetricValue metric={metric} present={present} past={past} />;
 }
 
 export default MetricPanel;
